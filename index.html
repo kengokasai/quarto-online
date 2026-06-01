@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quarto</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', 'Yu Gothic UI', sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+h1 { font-size: 2.6rem; letter-spacing: 0.25em; color: #e94560; margin-bottom: 4px; }
+.subtitle { color: #666; font-size: 0.85rem; margin-bottom: 24px; }
+
+/* ── Views ── */
+.view { width: 100%; max-width: 500px; }
+.view-title {
+  font-size: 1.1rem; font-weight: bold; color: #ccc;
+  margin-bottom: 16px; text-align: center;
+}
+
+/* ── Menu ── */
+.menu-section { margin-bottom: 20px; }
+.menu-section-label {
+  font-size: 0.75rem; color: #555; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 10px;
+  border-bottom: 1px solid #252535; padding-bottom: 5px;
+}
+.mode-btn {
+  display: block; width: 100%; margin: 7px 0;
+  padding: 13px 18px;
+  background: #16213e; color: #eee;
+  border: 1px solid #2a3a5e; border-radius: 8px;
+  cursor: pointer; font-size: 0.95rem;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  text-align: left;
+}
+.mode-btn:hover { background: #1e2d52; border-color: #e94560; transform: translateY(-1px); }
+.mode-btn.online-btn { border-color: #1a6e3a; }
+.mode-btn.online-btn:hover { background: #0d3020; border-color: #2ecc71; }
+.mode-btn.watch-btn { border-color: #3a2a6e; }
+.mode-btn.watch-btn:hover { background: #1a1030; border-color: #9b59b6; }
+
+/* ── Online Setup ── */
+.form-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.form-row label { font-size: 0.85rem; color: #999; flex-shrink: 0; min-width: 60px; }
+.inp {
+  flex: 1; padding: 10px 12px;
+  background: #0f1a2e; color: #eee;
+  border: 1px solid #2a3a5e; border-radius: 6px;
+  font-size: 0.95rem; outline: none;
+  transition: border-color 0.15s;
+}
+.inp:focus { border-color: #e94560; }
+.inp.code-inp {
+  text-transform: uppercase; letter-spacing: 0.2em;
+  font-size: 1.2rem; font-weight: bold; text-align: center;
+}
+.online-sep {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0; color: #444; font-size: 0.8rem;
+}
+.online-sep::before, .online-sep::after {
+  content: ''; flex: 1; height: 1px; background: #252535;
+}
+.btn-row { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.btn {
+  padding: 10px 18px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 0.9rem; transition: background 0.15s;
+}
+.btn-p  { background: #e94560; color: #fff; flex: 1; }
+.btn-p:hover  { background: #c73652; }
+.btn-g  { background: #27ae60; color: #fff; flex: 1; }
+.btn-g:hover  { background: #1e8449; }
+.btn-v  { background: #8e44ad; color: #fff; flex: 1; }
+.btn-v:hover  { background: #6c3483; }
+.btn-s  { background: #16213e; color: #aaa; border: 1px solid #333; }
+.btn-s:hover  { background: #1f2d55; }
+.err-msg { color: #e74c3c; font-size: 0.82rem; margin-top: 8px; min-height: 20px; }
+
+/* ── Waiting Room ── */
+#view-waiting { text-align: center; }
+.wait-label { color: #777; font-size: 0.82rem; margin-bottom: 8px; }
+.room-code-box {
+  display: inline-block; margin: 0 auto 18px;
+  background: #0f1a2e; border: 2px solid #2ecc71;
+  border-radius: 10px; padding: 18px 36px; cursor: pointer;
+  transition: background 0.15s;
+}
+.room-code-box:hover { background: #142a1a; }
+.room-code-big {
+  font-size: 3rem; font-weight: 900; letter-spacing: 0.3em;
+  color: #2ecc71; display: block; line-height: 1;
+}
+.room-code-hint { font-size: 0.72rem; color: #555; margin-top: 5px; }
+.copy-flash { color: #2ecc71; font-size: 0.8rem; margin-bottom: 10px; min-height: 20px; }
+.wait-players {
+  display: flex; gap: 16px; justify-content: center;
+  margin: 14px 0;
+}
+.wait-player {
+  background: #16213e; border-radius: 8px;
+  padding: 10px 20px; min-width: 110px;
+  border: 2px solid #252535;
+}
+.wait-player.filled { border-color: #2ecc71; }
+.wait-player .wp-name { font-size: 0.95rem; font-weight: bold; }
+.wait-player .wp-role { font-size: 0.7rem; color: #777; margin-top: 3px; }
+.wait-spec { color: #9b59b6; font-size: 0.8rem; margin-top: 8px; }
+.wait-spinner { display: inline-block; margin-right: 6px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Game Screen ── */
+#game { display: none; width: 100%; max-width: 1020px; }
+
+.game-topbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+#status {
+  flex: 1; text-align: center;
+  font-size: 1.05rem;
+  padding: 10px 16px;
+  background: #16213e;
+  border-radius: 8px;
+  border-left: 4px solid #e94560;
+  min-height: 44px;
+}
+.badge {
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 0.78rem; font-weight: bold;
+  flex-shrink: 0;
+}
+.badge-online   { background: #0d3020; color: #2ecc71; border: 1px solid #2ecc71; }
+.badge-spectate { background: #1a0d30; color: #9b59b6; border: 1px solid #9b59b6; }
+.badge-code     { background: #16213e; color: #555; border: 1px solid #252535; font-family: monospace; }
+.badge-spec-count { background: #16213e; color: #9b59b6; border: 1px solid #3a2a5e; }
+
+#main-area {
+  display: flex; gap: 22px;
+  justify-content: center; align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* ── Score Cards ── */
+.sc-card {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px; border-radius: 7px;
+  background: #16213e; border: 2px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 5px;
+}
+.sc-card.active { border-color: #e94560; background: #1e2d52; }
+.sc-card.me     { border-color: #27ae60 !important; background: #0d2018 !important; }
+.sc-left { display: flex; align-items: center; gap: 8px; }
+.sc-dot  { width: 10px; height: 10px; border-radius: 50%; background: #333; flex-shrink: 0; }
+.sc-card.active .sc-dot { background: #e94560; }
+.sc-card.me     .sc-dot { background: #2ecc71; }
+.sc-name { font-size: 0.9rem; font-weight: bold; }
+.sc-you  { font-size: 0.65rem; color: #2ecc71; margin-left: 4px; }
+.sc-right { display: flex; align-items: baseline; gap: 4px; }
+.sc-pts {
+  font-size: 1.35rem; font-weight: 900; color: #ffd700;
+  min-width: 2.5ch; text-align: right; display: inline-block;
+}
+.sc-pts.bump { animation: ptsBump 0.45s ease-out; }
+@keyframes ptsBump {
+  0%  { transform: scale(1.7); filter: brightness(2.5); }
+  60% { transform: scale(1.1); }
+  100%{ transform: scale(1);   filter: brightness(1);   }
+}
+.sc-pts-label { font-size: 0.68rem; color: #666; }
+
+/* ── Board ── */
+#board-wrap { flex: 0 0 auto; }
+#board {
+  display: grid;
+  grid-template-columns: repeat(4, 90px);
+  grid-template-rows: repeat(4, 90px);
+  gap: 5px; background: #0f3460;
+  padding: 8px; border-radius: 10px;
+}
+.cell {
+  width: 90px; height: 90px;
+  background: #162447; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid transparent; transition: all 0.15s;
+}
+.cell.placeable { cursor: pointer; border-color: #e94560; background: #1f2d5a; }
+.cell.placeable:hover { background: #2a3d7a; transform: scale(1.05); }
+.cell.winning {
+  background: #1b4a1b; border-color: #4caf50;
+  animation: pulse 0.9s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.5); }
+  50%      { box-shadow: 0 0 0 9px rgba(76,175,80,0); }
+}
+
+/* ── Side Panel ── */
+#side-panel { flex: 1; min-width: 220px; max-width: 285px; }
+.pbox {
+  background: #16213e; border-radius: 10px;
+  padding: 13px; margin-bottom: 13px;
+}
+.pbox h3 {
+  font-size: 0.88rem; color: #e94560;
+  margin-bottom: 9px; border-bottom: 1px solid #253558;
+  padding-bottom: 5px;
+}
+#cur-piece-area { display: flex; align-items: center; gap: 10px; }
+#cur-piece-name { font-size: 0.8rem; color: #aaa; line-height: 1.75; }
+#pgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.ptile {
+  background: #0f3460; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 3px; border: 2px solid transparent;
+  transition: all 0.15s; position: relative; cursor: default;
+}
+.ptile.selectable { cursor: pointer; border-color: #2a4a8a; }
+.ptile.selectable:hover { border-color: #e94560; background: #1a3a6a; transform: scale(1.1); }
+.ptile.used { opacity: 0.15; }
+.tip {
+  display: none; position: absolute; bottom: calc(100% + 5px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e; color: #eee; font-size: 0.68rem;
+  padding: 4px 7px; border-radius: 4px; white-space: nowrap;
+  z-index: 20; pointer-events: none; border: 1px solid #333;
+}
+.ptile:hover .tip { display: block; }
+
+/* ── Speed ── */
+#speed-box { display: none; }
+#spd-btns { display: flex; gap: 6px; }
+.spd-btn {
+  flex: 1; padding: 6px 4px; border: 1px solid #2a4a8a;
+  border-radius: 5px; background: #0f3460; color: #aaa;
+  cursor: pointer; font-size: 0.82rem; transition: all 0.15s;
+}
+.spd-btn:hover { background: #1a3a6a; color: #eee; }
+.spd-btn.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: bold; }
+
+/* ── Legend / Buttons ── */
+#legend { font-size: 0.78rem; color: #666; line-height: 1.9; }
+#btnarea { display: flex; gap: 9px; flex-wrap: wrap; }
+.game-btn { padding: 9px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.88rem; transition: background 0.15s; }
+.game-btn-p { background: #e94560; color: #fff; }
+.game-btn-p:hover { background: #c73652; }
+.game-btn-s { background: #16213e; color: #ccc; border: 1px solid #333; }
+.game-btn-s:hover { background: #1f2d55; }
+.game-btn-g { background: #27ae60; color: #fff; }
+.game-btn-g:hover { background: #1e8449; }
+#rematch-btn { display: none; }
+
+/* ── Move Log ── */
+#log-area { width: 100%; max-width: 1020px; margin-top: 16px; }
+.log-scroll { max-height: 180px; overflow-y: auto; }
+.log-entry {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 4px; border-bottom: 1px solid #1e2d52;
+  font-size: 0.79rem; animation: logIn 0.25s ease-out;
+}
+.log-entry:last-child { border-bottom: none; }
+@keyframes logIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.log-num  { color: #444; min-width: 2ch; text-align: right; flex-shrink: 0; }
+.log-name { font-weight: bold; min-width: 5.5em; flex-shrink: 0; }
+.log-act  { color: #999; flex: 1; }
+.log-pts  { font-weight: 900; color: #ffd700; min-width: 4ch; text-align: right; flex-shrink: 0; }
+.log-tag  { font-size: 0.68rem; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+.tag-win   { background: #2a5a2a; color: #7cf07c; }
+.tag-great { background: #1e3055; color: #7ac4ff; }
+.tag-good  { background: #222230; color: #aaa; }
+.tag-bad   { background: #4a2222; color: #ff8888; }
+
+/* ── Notification toast ── */
+#toast {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  background: #1e2d52; color: #eee; border: 1px solid #e94560;
+  padding: 10px 20px; border-radius: 8px; font-size: 0.9rem;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>QUARTO</h1>
+<div class="subtitle">4×4 ストラテジー・ボードゲーム</div>
+
+<div id="toast"></div>
+
+<!-- ════════ VIEW: Main Menu ════════ -->
+<div id="view-menu" class="view" style="display:none">
+  <div class="menu-section">
+    <div class="menu-section-label">ローカル対戦</div>
+    <button class="mode-btn" onclick="startLocal('hvh')">👥 人間 vs 人間</button>
+    <button class="mode-btn" onclick="startLocal('hva')">🤖 人間 vs AI　（あなたが先攻）</button>
+    <button class="mode-btn" onclick="startLocal('avh')">🤖 AI vs 人間　（AIが先攻）</button>
+    <button class="mode-btn" onclick="startLocal('ava')">⚙️ CPU vs CPU　（スコア対決・観戦）</button>
+  </div>
+  <div class="menu-section">
+    <div class="menu-section-label">オンライン対戦</div>
+    <button class="mode-btn online-btn" onclick="showView('online')">🌐 オンライン対戦を始める</button>
+  </div>
+</div>
+
+<!-- ════════ VIEW: Online Setup ════════ -->
+<div id="view-online" class="view" style="display:none">
+  <div class="view-title">🌐 オンライン対戦</div>
+
+  <div class="form-row">
+    <label>名前</label>
+    <input class="inp" id="pname" type="text" maxlength="12" placeholder="プレイヤー名（12文字まで）">
+  </div>
+
+  <div class="menu-section" style="margin-top:8px">
+    <div class="menu-section-label">ルームを作成する</div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="doCreateRoom()">🏠 ルームを作成</button>
+    </div>
+  </div>
+
+  <div class="online-sep">または</div>
+
+  <div class="menu-section">
+    <div class="menu-section-label">ルームに参加する</div>
+    <div class="form-row">
+      <label>コード</label>
+      <input class="inp code-inp" id="codeInput" type="text" maxlength="4" placeholder="XXXX"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="doJoinRoom(false)">⚔️ 対戦参加</button>
+      <button class="btn btn-v" onclick="doJoinRoom(true)">👁 観戦する</button>
+    </div>
+  </div>
+
+  <div class="err-msg" id="online-err"></div>
+
+  <div class="btn-row" style="margin-top:12px">
+    <button class="btn btn-s" onclick="showView('menu')">← 戻る</button>
+  </div>
+</div>
+
+<!-- ════════ VIEW: Waiting Room ════════ -->
+<div id="view-waiting" class="view" style="display:none">
+  <div class="view-title" id="wait-title">ルーム作成済み</div>
+
+  <div id="wait-code-area">
+    <div class="wait-label">ルームコード（クリックでコピー）</div>
+    <div class="room-code-box" onclick="copyCode()" id="codeBox">
+      <span class="room-code-big" id="codeDisplay">----</span>
+      <span class="room-code-hint">クリックしてコピー</span>
+    </div>
+    <div class="copy-flash" id="copy-flash"></div>
+  </div>
+
+  <div class="wait-players" id="wait-players">
+    <div class="wait-player" id="wp0">
+      <div class="wp-name" id="wp0-name">---</div>
+      <div class="wp-role">プレイヤー1（先攻）</div>
+    </div>
+    <div class="wait-player" id="wp1">
+      <div class="wp-name" id="wp1-name">待機中…</div>
+      <div class="wp-role">プレイヤー2（後攻）</div>
+    </div>
+  </div>
+
+  <div class="wait-spec" id="wait-spec"></div>
+
+  <p style="color:#666;font-size:0.82rem;margin:16px 0">
+    <span class="wait-spinner">⏳</span>
+    <span id="wait-msg">相手の参加を待っています…</span>
+  </p>
+
+  <div class="btn-row" style="justify-content:center;margin-top:16px">
+    <button class="btn btn-s" onclick="leaveRoom()">← キャンセル</button>
+  </div>
+</div>
+
+<!-- ════════ GAME SCREEN ════════ -->
+<div id="game">
+  <div class="game-topbar">
+    <div id="status"></div>
+    <div id="badge-online"   class="badge badge-online"   style="display:none">🌐 ONLINE</div>
+    <div id="badge-spectate" class="badge badge-spectate" style="display:none">👁 観戦中</div>
+    <div id="badge-code"     class="badge badge-code"     style="display:none"></div>
+    <div id="badge-specs"    class="badge badge-spec-count" style="display:none"></div>
+  </div>
+
+  <div id="main-area">
+    <!-- Board + Score Cards -->
+    <div id="board-wrap">
+      <div id="sc0" class="sc-card">
+        <div class="sc-left">
+          <div class="sc-dot"></div>
+          <span id="sn0" class="sc-name"></span>
+          <span id="you0" class="sc-you" style="display:none">▶ あなた</span>
+        </div>
+        <div class="sc-right">
+          <span id="sv0" class="sc-pts">0</span>
+          <span class="sc-pts-label">pts</span>
+        </div>
+      </div>
+      <div id="board"></div>
+      <div id="sc1" class="sc-card" style="margin-top:5px">
+        <div class="sc-left">
+          <div class="sc-dot"></div>
+          <span id="sn1" class="sc-name"></span>
+          <span id="you1" class="sc-you" style="display:none">▶ あなた</span>
+        </div>
+        <div class="sc-right">
+          <span id="sv1" class="sc-pts">0</span>
+          <span class="sc-pts-label">pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div id="side-panel">
+      <div class="pbox">
+        <h3>渡されたコマ（置く番）</h3>
+        <div id="cur-piece-area">
+          <div id="cur-piece-svg"></div>
+          <div id="cur-piece-name">まだ渡されていません</div>
+        </div>
+      </div>
+      <div class="pbox">
+        <h3>残りのコマ（渡す番）</h3>
+        <div id="pgrid"></div>
+      </div>
+      <div class="pbox" id="speed-box">
+        <h3>CPU スピード</h3>
+        <div id="spd-btns">
+          <button class="spd-btn" onclick="setSpeed('slow')">遅い</button>
+          <button class="spd-btn active" onclick="setSpeed('normal')">普通</button>
+          <button class="spd-btn" onclick="setSpeed('fast')">速い</button>
+        </div>
+      </div>
+      <div class="pbox">
+        <h3>コマの見方</h3>
+        <div id="legend">
+          <div>形：丸 ／ 四角</div>
+          <div>高さ：大きい ／ 小さい</div>
+          <div>色：白 ／ 茶色</div>
+          <div>穴：あり（中抜き）／ なし（塗り）</div>
+        </div>
+      </div>
+      <div id="btnarea">
+        <button class="game-btn game-btn-p" onclick="goMenu()">メニューへ</button>
+        <button class="game-btn game-btn-s" onclick="restartGame()">リスタート</button>
+        <button class="game-btn game-btn-g" id="rematch-btn" onclick="requestRematch()">再戦！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move Log -->
+  <div id="log-area">
+    <div class="pbox">
+      <h3>手順ログ　<span id="log-summary" style="font-weight:normal;color:#555;font-size:0.78rem"></span></h3>
+      <div class="log-scroll"><div id="log-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── file:// で直接開かれた場合はリダイレクト案内を表示 ──────────
+if (location.protocol === 'file:') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.innerHTML = `
+      <div style="
+        min-height:100vh; display:flex; flex-direction:column;
+        align-items:center; justify-content:center;
+        font-family:'Segoe UI',sans-serif; background:#1a1a2e; color:#eee;
+        padding:30px; text-align:center; gap:20px;
+      ">
+        <div style="font-size:3rem">⚠️</div>
+        <h2 style="color:#e94560; font-size:1.4rem">ファイルを直接開いています</h2>
+        <p style="color:#aaa; max-width:400px; line-height:1.8">
+          このゲームはサーバー経由で開く必要があります。<br>
+          <strong style="color:#fff">start.bat</strong> でサーバーを起動してから、<br>
+          ブラウザのアドレスバーに以下を入力してください：
+        </p>
+        <div style="
+          background:#0f1a2e; border:2px solid #2ecc71; border-radius:10px;
+          padding:16px 36px; cursor:pointer;
+        " onclick="navigator.clipboard?.writeText('http://localhost:3000').then(()=>this.querySelector('small').textContent='✓ コピーしました！')">
+          <span style="font-size:1.5rem; font-weight:900; color:#2ecc71; letter-spacing:0.05em">
+            http://localhost:3000
+          </span><br>
+          <small style="color:#555; font-size:0.75rem">クリックでコピー</small>
+        </div>
+        <p style="color:#555; font-size:0.82rem">
+          サーバーがまだ起動していない場合は start.bat をダブルクリックしてください
+        </p>
+      </div>`;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// PIECE ENCODING
+// Bits [3]=shape [2]=height [1]=color [0]=hole
+//   shape  0=circle 1=square
+//   height 0=short  1=tall
+//   color  0=white  1=brown
+//   hole   0=none   1=yes
+// ════════════════════════════════════════════════════════════
+
+function gA(p, b) { return (p >> b) & 1; }
+function pName(p) {
+  return `${gA(p,3)?'四角':'丸'}・${gA(p,2)?'高':'低'}・${gA(p,1)?'茶':'白'}・${gA(p,0)?'穴あり':'穴なし'}`;
+}
+function svgP(p, sz, hl) {
+  const shape=gA(p,3), tall=gA(p,2), brn=gA(p,1), hole=gA(p,0);
+  const fill=brn?'#8B5E3C':'#EDE8D8', sk=hl?'#e94560':'#556', sw=hl?3:1.8;
+  const cx=sz/2, cy=sz/2, R=tall?sz*0.42:sz*0.30;
+  let body='', extra='';
+  if (shape===0) {
+    body =`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${fill}" stroke="${sk}" stroke-width="${sw}"/>`;
+    if (hole) extra=`<circle cx="${cx}" cy="${cy}" r="${R*0.38}" fill="none" stroke="${sk}" stroke-width="${sw}"/>`;
+  } else {
+    const x=cx-R,y=cy-R;
+    body =`<rect x="${x}" y="${y}" width="${R*2}" height="${R*2}" rx="4" fill="${fill}" stroke="${sk}" stroke-width="${sw}"/>`;
+    if (hole) extra=`<circle cx="${cx}" cy="${cy}" r="${R*0.32}" fill="none" stroke="${sk}" stroke-width="${sw}"/>`;
+  }
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">${body}${extra}</svg>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// WIN LOGIC
+// ════════════════════════════════════════════════════════════
+
+const LINES = (() => {
+  const L=[];
+  for (let r=0;r<4;r++) L.push([[r,0],[r,1],[r,2],[r,3]]);
+  for (let c=0;c<4;c++) L.push([[0,c],[1,c],[2,c],[3,c]]);
+  L.push([[0,0],[1,1],[2,2],[3,3]],[[0,3],[1,2],[2,1],[3,0]]);
+  for (let r=0;r<3;r++) for (let c=0;c<3;c++)
+    L.push([[r,c],[r,c+1],[r+1,c],[r+1,c+1]]);
+  return L;
+})();
+
+function winningLines(board) {
+  return LINES.filter(ln => {
+    const ps=ln.map(([r,c])=>board[r][c]);
+    if (ps.some(p=>p===null)) return false;
+    for (let b=0;b<4;b++) {
+      const v=(ps[0]>>b)&1;
+      if (ps.every(p=>((p>>b)&1)===v)) return true;
+    }
+    return false;
+  });
+}
+function wouldWin(board,r,c,p) { board[r][c]=p; const ok=winningLines(board).length>0; board[r][c]=null; return ok; }
+function canWinWith(board,piece) {
+  for (let r=0;r<4;r++) for (let c=0;c<4;c++)
+    if (board[r][c]===null && wouldWin(board,r,c,piece)) return true;
+  return false;
+}
+function boardThreatCount(board) {
+  let n=0;
+  for (const ln of LINES) {
+    const ps=ln.map(([r,c])=>board[r][c]).filter(p=>p!==null);
+    if (ps.length!==3) continue;
+    for (let b=0;b<4;b++) {
+      const v=(ps[0]>>b)&1;
+      if (ps.every(p=>((p>>b)&1)===v)) { n++; break; }
+    }
+  }
+  return n;
+}
+function pieceGiveDanger(board,piece) {
+  let n=0;
+  for (const ln of LINES) {
+    const filled=ln.map(([r,c])=>board[r][c]).filter(p=>p!==null);
+    if (filled.length===3) {
+      for (let b=0;b<4;b++) {
+        const v=(piece>>b)&1;
+        if (filled.every(p=>((p>>b)&1)===v)) { n++; break; }
+      }
+    }
+  }
+  return n;
+}
+
+// ════════════════════════════════════════════════════════════
+// SCORING
+// ════════════════════════════════════════════════════════════
+
+function calcGiveScore(piece,board,avail) {
+  const allBad=avail.every(p=>canWinWith(board,p));
+  if (canWinWith(board,piece)) return allBad?3:0;
+  const safe=avail.filter(p=>!canWinWith(board,p));
+  const myD=pieceGiveDanger(board,piece);
+  const minD=Math.min(...safe.map(p=>pieceGiveDanger(board,p)));
+  return myD===minD?15:10;
+}
+function calcPlaceScore(r,c,piece,board) {
+  if (wouldWin(board,r,c,piece)) return 100;
+  const before=boardThreatCount(board);
+  board[r][c]=piece; const after=boardThreatCount(board); board[r][c]=null;
+  return 3+Math.max(0,after-before)*15;
+}
+function logTag(action,pts) {
+  if (action==='place'&&pts===100) return ['QUARTO! 🏆','tag-win'];
+  if (pts>=30) return ['脅威×2+ ⚡','tag-great'];
+  if (pts>=15) return ['ベスト ✨','tag-great'];
+  if (pts>=10) return ['安全','tag-good'];
+  if (pts>=3)  return ['普通','tag-good'];
+  return ['危険 ⚠️','tag-bad'];
+}
+
+// ════════════════════════════════════════════════════════════
+// AI (local only)
+// ════════════════════════════════════════════════════════════
+
+function aiPlace(board,piece) {
+  const empty=[];
+  for (let r=0;r<4;r++) for (let c=0;c<4;c++) if (board[r][c]===null) empty.push([r,c]);
+  if (!empty.length) return [0,0];
+  for (const [r,c] of empty) if (wouldWin(board,r,c,piece)) return [r,c];
+  let best=[],bestS=Infinity;
+  for (const [r,c] of empty) {
+    board[r][c]=piece;
+    let s=0;
+    for (const ln of LINES) {
+      const f=ln.map(([lr,lc])=>board[lr][lc]).filter(p=>p!==null);
+      if (f.length>=3) s++;
+    }
+    board[r][c]=null;
+    if (s<bestS){bestS=s;best=[[r,c]];}else if(s===bestS) best.push([r,c]);
+  }
+  return best[Math.random()*best.length|0];
+}
+function aiGive(board,avail) {
+  const safe=avail.filter(p=>!canWinWith(board,p));
+  const pool=safe.length?safe:avail;
+  let best=[],bestS=Infinity;
+  for (const p of pool) {
+    const s=pieceGiveDanger(board,p);
+    if (s<bestS){bestS=s;best=[p];}else if(s===bestS) best.push(p);
+  }
+  return best[Math.random()*best.length|0];
+}
+
+// ════════════════════════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════════════════════════
+
+let G = null, lastMode = null;
+const SPEED_MS = { slow:1300, normal:620, fast:130 };
+
+function mkBoard() { return Array.from({length:4},()=>Array(4).fill(null)); }
+
+function initGame(mode, namesOverride) {
+  G = {
+    mode,
+    board  : mkBoard(),
+    avail  : Array.from({length:16},(_,i)=>i),
+    phase  : 'give',
+    giver  : 0,
+    cur    : null,
+    over   : false,
+    winner : null,
+    draw   : false,
+    wl     : [],
+    scores : [0,0],
+    log    : [],
+    speed  : 'normal',
+    names  : namesOverride || (
+      mode==='hva'?['あなた','AI']:
+      mode==='avh'?['AI','あなた']:
+      mode==='ava'?['CPU-A','CPU-B']:
+                   ['プレイヤー1','プレイヤー2']
+    ),
+  };
+  renderedLogCount = 0;
+  document.getElementById('log-list').innerHTML='';
+  document.getElementById('log-summary').textContent='';
+  document.getElementById('speed-box').style.display = mode==='ava'?'':'none';
+  document.getElementById('rematch-btn').style.display = 'none';
+  setSpeedUI('normal');
+
+  // Online badges
+  const isOnline = mode==='online';
+  document.getElementById('badge-online').style.display   = isOnline?'':'none';
+  document.getElementById('badge-spectate').style.display = (isOnline&&mySlot===-1)?'':'none';
+  document.getElementById('badge-code').style.display     = isOnline?'':'none';
+  document.getElementById('badge-code').textContent       = isOnline?`# ${onlineCode}`:'';
+  document.getElementById('you0').style.display = (isOnline&&mySlot===0)?'':'none';
+  document.getElementById('you1').style.display = (isOnline&&mySlot===1)?'':'none';
+
+  render();
+  if (!isOnline && isAI(G.giver)) setTimeout(doAI, getDelay());
+}
+
+function isAI(idx) {
+  if (G.mode==='online') return false;
+  return G.mode==='ava' || (G.mode==='hva'&&idx===1) || (G.mode==='avh'&&idx===0);
+}
+function getDelay() { return SPEED_MS[G.speed]??620; }
+
+function doAI() {
+  if (!G||G.over||G.mode==='online') return;
+  if (G.phase==='give') givepiece(aiGive(G.board,G.avail));
+  else { const [r,c]=aiPlace(G.board,G.cur); putpiece(r,c); }
+}
+
+// ── Actions ──────────────────────────────────────────────────
+
+function givepiece(p) {
+  if (!G||G.phase!=='give'||!G.avail.includes(p)) return;
+
+  if (G.mode==='online') {
+    // In online mode: only send to server if it's my turn
+    if (mySlot<0 || G.giver!==mySlot) return;
+    skt.emit('give_piece',{piece:p});
+    return;
+  }
+
+  const pts=calcGiveScore(p,G.board,G.avail);
+  G.scores[G.giver]+=pts;
+  pushLog(G.giver,'give',p,pts,-1,-1);
+  bumpScore(G.giver);
+  G.cur=p; G.avail=G.avail.filter(x=>x!==p); G.phase='place';
+  render();
+  if (isAI(1-G.giver)) setTimeout(doAI,getDelay());
+}
+
+function putpiece(r,c) {
+  if (!G||G.phase!=='place'||G.board[r][c]!==null) return;
+
+  if (G.mode==='online') {
+    const placer=1-G.giver;
+    if (mySlot<0||placer!==mySlot) return;
+    skt.emit('put_piece',{r,c});
+    return;
+  }
+
+  const placer=1-G.giver;
+  const pts=calcPlaceScore(r,c,G.cur,G.board);
+  G.scores[placer]+=pts;
+  pushLog(placer,'place',G.cur,pts,r,c);
+  bumpScore(placer);
+  G.board[r][c]=G.cur; G.cur=null;
+
+  const wl=winningLines(G.board);
+  if (wl.length) { G.over=true;G.winner=placer;G.wl=wl; render(); return; }
+  if (!G.avail.length) { G.over=true;G.draw=true; render(); return; }
+  G.giver=placer; G.phase='give';
+  render();
+  if (isAI(G.giver)) setTimeout(doAI,getDelay());
+}
+
+// ── Render ────────────────────────────────────────────────────
+
+function render() {
+  renderStatus();
+  renderBoard();
+  renderCurPiece();
+  renderGrid();
+  renderScoreCards();
+  renderLogSummary();
+  if (G.over) document.getElementById('rematch-btn').style.display = G.mode==='online' ? '' : 'none';
+}
+
+function renderStatus() {
+  const el=document.getElementById('status');
+  if (G.over) {
+    if (G.draw) { el.innerHTML='<b>引き分け！</b>　全コマが置かれました。'; return; }
+    if (G.abandoned) {
+      el.innerHTML=`<b>${G.names[G.winner]}</b> の勝利！（相手が切断しました）`;
+      return;
+    }
+    const diff=G.scores[G.winner]-G.scores[1-G.winner];
+    el.innerHTML=`<b>${G.names[G.winner]}</b> の勝利！🎉　スコア差 +${diff} pts`;
+    return;
+  }
+  const isOnline=G.mode==='online';
+  if (G.phase==='give') {
+    const n=G.names[G.giver];
+    // オンライン: 自分の番かどうか / ローカル: AIでなければ自分の番
+    const myTurn = isOnline ? G.giver===mySlot : !isAI(G.giver);
+    el.textContent = isAI(G.giver)
+      ? `${n} がコマを選んでいます…`
+      : myTurn
+        ? `${n}：相手に渡すコマを選んでください（残り ${G.avail.length} 個）`
+        : `${n} がコマを選んでいます…`;
+  } else {
+    const pl=1-G.giver, n=G.names[pl];
+    const myTurn = isOnline ? pl===mySlot : !isAI(pl);
+    el.textContent = isAI(pl)
+      ? `${n} がコマを置いています…`
+      : myTurn
+        ? `${n}：コマを置く場所を選んでください`
+        : `${n} がコマを置いています…`;
+  }
+}
+
+function renderBoard() {
+  const el=document.getElementById('board'); el.innerHTML='';
+  const wSet=new Set(G.wl.flat().map(([r,c])=>`${r},${c}`));
+  const isOnline=G.mode==='online';
+  const myTurn=isOnline ? (G.phase==='place'&&(1-G.giver)===mySlot) : !isAI(1-G.giver);
+  const canPlace=G.phase==='place'&&!G.over&&myTurn;
+
+  for (let r=0;r<4;r++) for (let c=0;c<4;c++) {
+    const d=document.createElement('div'); d.className='cell';
+    if (wSet.has(`${r},${c}`)) d.classList.add('winning');
+    if (G.board[r][c]!==null) {
+      d.innerHTML=svgP(G.board[r][c],78);
+    } else if (canPlace) {
+      d.classList.add('placeable');
+      const ri=r,ci=c; d.onclick=()=>putpiece(ri,ci);
+    }
+    el.appendChild(d);
+  }
+}
+
+function renderCurPiece() {
+  const sv=document.getElementById('cur-piece-svg');
+  const nm=document.getElementById('cur-piece-name');
+  if (G.cur!==null) {
+    sv.innerHTML=svgP(G.cur,66,true);
+    nm.innerHTML=pName(G.cur).replace(/・/g,'<br>');
+  } else {
+    sv.innerHTML=''; nm.textContent='まだ渡されていません';
+  }
+}
+
+function renderGrid() {
+  const el=document.getElementById('pgrid'); el.innerHTML='';
+  const isOnline=G.mode==='online';
+  const myTurn=isOnline ? G.giver===mySlot : !isAI(G.giver);
+  const canGive=G.phase==='give'&&!G.over&&myTurn;
+
+  for (let i=0;i<16;i++) {
+    const d=document.createElement('div'); d.className='ptile';
+    if (!G.avail.includes(i)) { d.classList.add('used'); }
+    else if (canGive) {
+      d.classList.add('selectable');
+      const pi=i; d.onclick=()=>givepiece(pi);
+    }
+    d.innerHTML=svgP(i,44)+`<span class="tip">${pName(i)}</span>`;
+    el.appendChild(d);
+  }
+}
+
+function renderScoreCards() {
+  for (const idx of [0,1]) {
+    const card=document.getElementById(`sc${idx}`);
+    document.getElementById(`sn${idx}`).textContent=G.names[idx];
+    document.getElementById(`sv${idx}`).textContent=G.scores[idx];
+    const active=G.over?false:(G.phase==='give'?G.giver===idx:(1-G.giver)===idx);
+    const isMe=G.mode==='online'&&mySlot===idx;
+    card.className='sc-card'+(isMe?' me':active?' active':'');
+  }
+}
+
+function bumpScore(idx) {
+  const el=document.getElementById(`sv${idx}`);
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  el.addEventListener('animationend',()=>el.classList.remove('bump'),{once:true});
+}
+
+// ── Log ───────────────────────────────────────────────────────
+
+let renderedLogCount = 0;
+
+function pushLog(player,action,piece,pts,r,c) {
+  G.log.push({player,action,piece,pts,r,c,move:G.log.length+1});
+  renderOneLogEntry(G.log[G.log.length-1]);
+}
+
+function renderOneLogEntry(e) {
+  const list=document.getElementById('log-list');
+  const div=document.createElement('div'); div.className='log-entry';
+  const actText=e.action==='give'
+    ?`渡す → ${pName(e.piece)}`
+    :`(${e.r+1},${e.c+1}) に置く → ${pName(e.piece)}`;
+  const [tagText,tagClass]=logTag(e.action,e.pts);
+  const color=e.player===0?'#7ac4ff':'#f0a040';
+  div.innerHTML=
+    `<span class="log-num">${e.move}</span>`+
+    `<span class="log-name" style="color:${color}">${G.names[e.player]}</span>`+
+    `<span class="log-act">${actText}</span>`+
+    `<span class="log-pts">+${e.pts}</span>`+
+    `<span class="log-tag ${tagClass}">${tagText}</span>`;
+  list.appendChild(div);
+  const scroll=document.querySelector('.log-scroll');
+  if (scroll) scroll.scrollTop=scroll.scrollHeight;
+  renderedLogCount++;
+}
+
+function renderLogSummary() {
+  document.getElementById('log-summary').textContent=G.log.length?`${G.log.length} 手`:'';
+}
+
+// Sync online log (only render newly arrived entries)
+function syncLog() {
+  while (renderedLogCount < G.log.length) {
+    renderOneLogEntry(G.log[renderedLogCount]);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// ONLINE  (Socket.io)
+// ════════════════════════════════════════════════════════════
+
+let skt       = null;   // socket instance
+let mySlot    = -2;     // -2=local -1=spectator 0=P1 1=P2
+let onlineCode = null;
+
+function ensureSocket(cb) {
+  if (skt) { cb(skt); return; }
+  if (typeof io === 'undefined') {
+    // Lazy-load socket.io from server
+    const s = document.createElement('script');
+    s.src = '/socket.io/socket.io.js';
+    s.onload  = () => { connectSocket(cb); };
+    s.onerror = () => {
+      showOnlineErr('サーバーに接続できません。npm start でサーバーを起動してください。');
+    };
+    document.head.appendChild(s);
+  } else {
+    connectSocket(cb);
+  }
+}
+
+function connectSocket(cb) {
+  skt = io({ autoConnect: true });
+
+  skt.on('connect', ()  => { console.log('Socket connected:', skt.id); cb && cb(skt); cb=null; });
+  skt.on('disconnect',  () => { showToast('サーバーから切断されました。'); });
+  skt.on('connect_error',   () => { showOnlineErr('接続失敗。サーバーが起動しているか確認してください。'); });
+
+  // ── Server events ──
+
+  skt.on('room_created', ({ code, name }) => {
+    onlineCode = code;
+    mySlot = 0;
+    document.getElementById('codeDisplay').textContent = code;
+    document.getElementById('wp0-name').textContent = name;
+    document.getElementById('wp0').classList.add('filled');
+    document.getElementById('wait-title').textContent = 'ルームを作成しました';
+    document.getElementById('wait-msg').textContent = '相手の参加を待っています…';
+    document.getElementById('wait-code-area').style.display = '';
+    document.getElementById('wait-players').style.display = '';
+    showView('waiting');
+  });
+
+  skt.on('room_joined', ({ slot, names, code, game, specCount, waiting }) => {
+    mySlot    = slot;
+    onlineCode = code;
+    if (slot === 1) {
+      // Player 2: wait for game_start
+      document.getElementById('codeDisplay').textContent = code;
+      document.getElementById('wp0-name').textContent = names[0];
+      document.getElementById('wp1-name').textContent = names[1];
+      document.getElementById('wp0').classList.add('filled');
+      document.getElementById('wp1').classList.add('filled');
+      document.getElementById('wait-title').textContent = '参加しました！';
+      document.getElementById('wait-msg').textContent = 'ゲーム開始を待っています…';
+      document.getElementById('wait-code-area').style.display = 'none';
+      showView('waiting');
+    } else {
+      // Spectator
+      document.getElementById('codeDisplay').textContent = code;
+      document.getElementById('wp0-name').textContent = names[0]||'---';
+      document.getElementById('wp1-name').textContent = names[1]||'待機中…';
+      if (names[0]) document.getElementById('wp0').classList.add('filled');
+      if (names[1]) document.getElementById('wp1').classList.add('filled');
+      document.getElementById('wait-title').textContent = '観戦モード';
+      document.getElementById('wait-msg').textContent = waiting ? 'ゲームの開始を待っています…' : '';
+      document.getElementById('wait-spec').textContent = specCount > 1 ? `👁 観戦者 ${specCount} 人` : '';
+      document.getElementById('wait-code-area').style.display = 'none';
+      showView('waiting');
+      if (!waiting && game) {
+        // Game already in progress — go straight to game screen
+        startOnlineGame(names, game);
+      }
+    }
+  });
+
+  skt.on('opponent_joined', ({ name }) => {
+    document.getElementById('wp1-name').textContent = name;
+    document.getElementById('wp1').classList.add('filled');
+    document.getElementById('wait-msg').textContent = `${name} が参加しました！開始します…`;
+    showToast(`${name} が参加しました！`);
+  });
+
+  skt.on('game_start', ({ names }) => {
+    // This fires on all clients when the game starts
+    // Actual game state arrives via game_state immediately after
+    document.getElementById('wait-msg').textContent = 'ゲーム開始！';
+  });
+
+  skt.on('game_state', ({ game, names, specCount }) => {
+    if (G && G.mode==='online') {
+      // Update existing game state
+      const prevScores = G.scores ? [...G.scores] : [0,0];
+      applyServerState(game, names);
+      // Animate score bumps for newly earned points
+      for (let i=0;i<2;i++) {
+        if (G.scores[i] > prevScores[i]) bumpScore(i);
+      }
+    } else {
+      // First state: initialize game screen
+      startOnlineGame(names, game);
+    }
+    if (specCount !== undefined) updateSpecBadge(specCount);
+  });
+
+  skt.on('player_left', ({ slot, name }) => {
+    showToast(`${name} が切断しました。`);
+    if (G) { G.abandoned = true; render(); }
+  });
+
+  skt.on('spec_count', ({ count }) => updateSpecBadge(count));
+
+  skt.on('join_error', ({ msg }) => {
+    showOnlineErr(msg);
+    showView('online');
+  });
+
+  skt.on('join_notice', ({ msg }) => showToast(msg));
+}
+
+function startOnlineGame(names, game) {
+  _setLastMode('online');
+  initGame('online', names);
+  applyServerState(game, names);
+  showGameScreen();
+}
+
+function applyServerState(game, names) {
+  if (!G) return;
+  G.board  = game.board;
+  G.avail  = game.avail;
+  G.phase  = game.phase;
+  G.giver  = game.giver;
+  G.cur    = game.cur;
+  G.over   = game.over;
+  G.winner = game.winner;
+  G.draw   = game.draw;
+  G.wl     = game.wl || [];
+  G.scores = game.scores;
+  G.abandoned = game.abandoned;
+  if (names) G.names = names;
+  // Sync log entries
+  G.log = game.log;
+  syncLog();
+  render();
+}
+
+function updateSpecBadge(count) {
+  const el = document.getElementById('badge-specs');
+  if (count > 0) {
+    el.textContent = `👁 ${count}`;
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ── Online actions ────────────────────────────────────────────
+
+function doCreateRoom() {
+  const name = document.getElementById('pname').value.trim();
+  clearOnlineErr();
+  ensureSocket(s => {
+    s.emit('create_room', { name });
+  });
+}
+
+function doJoinRoom(asSpectator) {
+  const name = document.getElementById('pname').value.trim();
+  const code = document.getElementById('codeInput').value.toUpperCase().trim();
+  if (!code || code.length < 4) {
+    showOnlineErr('4文字のルームコードを入力してください。');
+    return;
+  }
+  clearOnlineErr();
+  ensureSocket(s => {
+    s.emit('join_room', { code, name, asSpectator });
+  });
+}
+
+function leaveRoom() {
+  if (skt) { skt.disconnect(); skt = null; }
+  mySlot = -2; onlineCode = null;
+  showView('menu');
+}
+
+function requestRematch() {
+  if (!G?.over || G.mode!=='online' || mySlot<0) return;
+  skt?.emit('rematch');
+}
+
+// ════════════════════════════════════════════════════════════
+// SPEED CONTROL
+// ════════════════════════════════════════════════════════════
+
+function setSpeed(s) {
+  if (G) G.speed=s;
+  setSpeedUI(s);
+}
+function setSpeedUI(s) {
+  document.querySelectorAll('.spd-btn').forEach(b => {
+    b.classList.toggle('active',
+      (s==='slow'&&b.textContent==='遅い') ||
+      (s==='normal'&&b.textContent==='普通') ||
+      (s==='fast'&&b.textContent==='速い')
+    );
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+
+function showView(name) {
+  ['view-menu','view-online','view-waiting'].forEach(id => {
+    // '' だと CSS の display:none が復活するので 'block' を明示
+    document.getElementById(id).style.display = id===`view-${name}`?'block':'none';
+  });
+  document.getElementById('game').style.display='none';
+}
+
+function showGameScreen() {
+  ['view-menu','view-online','view-waiting'].forEach(id => {
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('game').style.display='block';
+}
+
+function startLocal(mode) {
+  lastMode=mode;
+  mySlot=-2; onlineCode=null;
+  showGameScreen();
+  initGame(mode);
+  if (isAI(G.giver)) setTimeout(doAI,getDelay());
+}
+
+function goMenu() {
+  if (G?.mode==='online') leaveRoom();
+  showView('menu');
+}
+
+function restartGame() {
+  if (G?.mode === 'online') { requestRematch(); return; }
+  if (!lastMode) return;
+  showGameScreen();
+  initGame(lastMode);
+  if (isAI(G.giver)) setTimeout(doAI, getDelay());
+}
+
+// Called from startOnlineGame — keeps lastMode in sync
+function _setLastMode(m) { lastMode = m; }
+
+// ════════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════════
+
+function showOnlineErr(msg) { document.getElementById('online-err').textContent=msg; }
+function clearOnlineErr()   { document.getElementById('online-err').textContent=''; }
+
+let toastTimer=null;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function copyCode() {
+  const code=document.getElementById('codeDisplay').textContent;
+  if (!code||code==='----') return;
+  navigator.clipboard?.writeText(code).then(()=>{
+    const fl=document.getElementById('copy-flash');
+    fl.textContent='✓ コピーしました！';
+    setTimeout(()=>fl.textContent='',2000);
+  });
+}
+
+// ── ページ読み込み時の初期化（スクリプト末尾で同期実行） ────────
+// DOMContentLoaded は bfcache 復元時や再接続時に発火しないため、
+// スクリプトタグがボディ末尾にある = 上のすべての DOM は解析済み、
+// なので addEventListener を使わず直接呼べる。
+if (location.protocol !== 'file:') {
+  G = null; lastMode = null; skt = null; mySlot = -2; onlineCode = null;
+  showView('menu');
+}
+</script>
+</body>
+</html>
