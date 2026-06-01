@@ -947,11 +947,36 @@ function ensureSocket(cb) {
 }
 
 function connectSocket(cb) {
-  skt = io({ autoConnect: true });
+  skt = io({
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 10,    // 最大10回再試行
+    reconnectionDelay: 1500,     // 1.5秒後に再試行
+    reconnectionDelayMax: 8000,  // 最大8秒待機
+  });
 
-  skt.on('connect', ()  => { console.log('Socket connected:', skt.id); cb && cb(skt); cb=null; });
-  skt.on('disconnect',  () => { showToast('サーバーから切断されました。'); });
-  skt.on('connect_error',   () => { showOnlineErr('接続失敗。サーバーが起動しているか確認してください。'); });
+  skt.on('connect', () => {
+    console.log('Socket connected:', skt.id);
+    // 再接続後にゲーム中だった場合はルームに再参加
+    if (onlineCode && mySlot >= 0) {
+      const name = G?.names?.[mySlot] || 'プレイヤー';
+      skt.emit('join_room', { code: onlineCode, name, asSpectator: false });
+    }
+    cb && cb(skt); cb = null;
+  });
+  skt.on('disconnect', (reason) => {
+    showToast('切断されました。再接続中…');
+    console.log('disconnect:', reason);
+  });
+  skt.on('reconnect', (n) => {
+    showToast(`再接続しました（${n}回目）`);
+  });
+  skt.on('reconnect_failed', () => {
+    showOnlineErr('再接続に失敗しました。ページを再読み込みしてください。');
+  });
+  skt.on('connect_error', () => {
+    showOnlineErr('接続失敗。サーバーが起動しているか確認してください。');
+  });
 
   // ── Server events ──
 
