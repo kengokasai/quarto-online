@@ -1034,22 +1034,23 @@ function connectSocket(cb) {
   });
 
   skt.on('game_start', ({ names }) => {
-    // This fires on all clients when the game starts
-    // Actual game state arrives via game_state immediately after
-    document.getElementById('wait-msg').textContent = 'ゲーム開始！';
+    // ゲーム開始通知（直後に game_state が届いてゲーム画面に遷移する）
+    document.getElementById('wait-msg').textContent = '🎮 ゲーム開始！';
   });
 
   skt.on('game_state', ({ game, names, specCount }) => {
-    if (G && G.mode==='online') {
-      // Update existing game state
+    // ゲーム画面が実際に表示中かどうかで判断（G.modeだけでは再参加時に誤判定）
+    const gameScreenVisible = document.getElementById('game').style.display === 'block';
+    if (gameScreenVisible && G && G.mode==='online') {
+      // 進行中ゲームの状態更新
       const prevScores = G.scores ? [...G.scores] : [0,0];
       applyServerState(game, names);
-      // Animate score bumps for newly earned points
+      // スコアが増えたらアニメーション
       for (let i=0;i<2;i++) {
         if (G.scores[i] > prevScores[i]) bumpScore(i);
       }
     } else {
-      // First state: initialize game screen
+      // 初回 or 待機画面からゲーム開始
       startOnlineGame(names, game);
     }
     if (specCount !== undefined) updateSpecBadge(specCount);
@@ -1132,6 +1133,7 @@ function doJoinRoom(asSpectator) {
 
 function leaveRoom() {
   if (skt) { skt.disconnect(); skt = null; }
+  G = null; // 前回のオンラインゲーム状態をリセット
   mySlot = -2; onlineCode = null;
   showView('menu');
 }
